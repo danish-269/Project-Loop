@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     }
 
     const completion = await client.chat.completions.create({
-      model: "google/gemma-3-27b-it:free",
+      model: "nvidia/nemotron-nano-9b-v2:free",
       temperature: 0.2,
       messages: [
         {
@@ -79,7 +79,22 @@ ${message}
       );
     }
 
-    const ai = JSON.parse(json[0]);
+    let ai;
+
+    try {
+      ai = JSON.parse(result || "{}");
+    } catch {
+      console.log("Raw AI response:", result);
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "AI returned invalid JSON.",
+          response: result,
+        },
+        { status: 500 }
+      );
+    }
 
     const workspace = await prisma.workspace.findFirst();
 
