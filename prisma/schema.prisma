@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  ANALYST
+  VIEWER
+}
+
+enum FeedbackSource {
+  EMAIL
+  WEBSITE
+  PLAYSTORE
+  MANUAL
+}
+
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+model Workspace {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  users     User[]
+  feedbacks Feedback[]
+  themes    Theme[]
+  reports   Report[]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(ANALYST)
+  createdAt DateTime @default(now())
+
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+}
+
+model Feedback {
+  id        String         @id @default(uuid())
+  customer  String?
+  message   String
+  source    FeedbackSource
+
+   rating    Int?
+
+  sentiment Sentiment?
+  theme     String?
+  summary   String?
+  createdAt DateTime       @default(now())
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  themes FeedbackTheme[]
+}
+
+model Theme {
+  id   String @id @default(uuid())
+  name String
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  feedbacks FeedbackTheme[]
+}
+
+model FeedbackTheme {
+  feedbackId String
+  themeId    String
+
+  feedback Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  theme    Theme    @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@id([feedbackId, themeId])
+}
+
+model Report {
+  id        String   @id @default(uuid())
+  title     String
+  createdAt DateTime @default(now())
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
