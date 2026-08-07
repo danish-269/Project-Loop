@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     }
 
     const completion = await client.chat.completions.create({
-      model: "openrouter/free",
+      model: "google/gemma-3-27b-it:free",
       temperature: 0.2,
       messages: [
         {
