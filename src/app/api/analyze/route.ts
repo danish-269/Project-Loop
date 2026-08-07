@@ -62,9 +62,24 @@ ${message}
       ],
     });
 
-    const result = completion.choices[0].message.content;
+    const result = completion.choices[0].message.content ?? "";
 
-    const ai = JSON.parse(result || "{}");
+    console.log(result);
+
+    const json = result.match(/\{[\s\S]*\}/);
+
+    if (!json) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "AI did not return JSON.",
+          raw: result,
+        },
+        { status: 500 }
+      );
+    }
+
+    const ai = JSON.parse(json[0]);
 
     const workspace = await prisma.workspace.findFirst();
 
@@ -93,7 +108,7 @@ ${message}
       },
     });
 
-    
+
 
     return NextResponse.json({
       success: true,
