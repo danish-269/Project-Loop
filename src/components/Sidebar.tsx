@@ -1,4 +1,5 @@
 "use client";
+import { useUser } from "@/context/UserContext";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Bot } from "lucide-react";
@@ -11,41 +12,58 @@ import {
     LogOut,
 } from "lucide-react";
 
-const menu = [
-    {
-        name: "Dashboard",
-        href: "/dashboard",
-        icon: LayoutDashboard,
-    },
-    {
-        name: "Add Feedback",
-        href: "/feedback",
-        icon: PlusCircle,
-    },
-    {
-        name: "Feedback History",
-        href: "/feedback/list",
-        icon: ClipboardList,
-    },
-    {
-        name: "Reports",
-        href: "/reports",
-        icon: BarChart3,
-    },
-    {
-        name: "Settings",
-        href: "/settings",
-        icon: Settings,
-    },
-    {
-        name: "Ask LOOP",
-        href: "/ask-loop",
-        icon: Bot,
-    },
-];
-
 
 export default function Sidebar() {
+    const user = useUser();
+
+    const menu = [
+        {
+            name: "Dashboard",
+            href: "/dashboard",
+            icon: LayoutDashboard,
+        },
+
+        ...(user?.role !== "VIEWER"
+            ? [
+                {
+                    name: "Add Feedback",
+                    href: "/feedback",
+                    icon: PlusCircle,
+                },
+            ]
+            : []),
+
+        {
+            name: "Feedback History",
+            href: "/feedback/list",
+            icon: ClipboardList,
+        },
+
+        ...(user?.role !== "VIEWER"
+            ? [
+                {
+                    name: "Reports",
+                    href: "/reports",
+                    icon: BarChart3,
+                },
+                {
+                    name: "Ask LOOP",
+                    href: "/ask-loop",
+                    icon: Bot,
+                },
+            ]
+            : []),
+
+        ...(user?.role === "ADMIN"
+            ? [
+                {
+                    name: "Settings",
+                    href: "/settings",
+                    icon: Settings,
+                },
+            ]
+            : []),
+    ];
     return (
         <aside className="w-72 bg-white border-r shadow-sm min-h-screen">
 
@@ -90,7 +108,13 @@ export default function Sidebar() {
 
             <div className="mt-auto p-5">
 
-                <button className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition">
+                <button
+                    onClick={() => {
+                        localStorage.removeItem("user");
+                        window.location.href = "/login";
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition"
+                >
                     <LogOut size={20} />
                     Logout
                 </button>

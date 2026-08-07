@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+import UserGreeting from "@/components/UserGreeting";
 
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -47,11 +48,52 @@ export default async function Dashboard() {
     },
   });
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const newFeedbackToday = await prisma.feedback.count({
+    where: {
+      createdAt: {
+        gte: today,
+      },
+    },
+  });
+
   const recentFeedback = await prisma.feedback.findMany({
     orderBy: {
       createdAt: "desc",
     },
     take: 5,
+  });
+
+  const todayFeedback = await prisma.feedback.count({
+    where: {
+      createdAt: {
+        gte: today,
+      },
+    },
+  });
+
+
+  const positivePercentage =
+    totalFeedback > 0
+      ? Math.round((positive / totalFeedback) * 100)
+      : 0;
+
+  const neutralPercentage =
+    totalFeedback > 0
+      ? Math.round((neutral / totalFeedback) * 100)
+      : 0;
+
+  const negativePercentage =
+    totalFeedback > 0
+      ? Math.round((negative / totalFeedback) * 100)
+      : 0;
+
+  const averageRating = await prisma.feedback.aggregate({
+    _avg: {
+      rating: true,
+    },
   });
 
   return (
@@ -70,13 +112,7 @@ export default async function Dashboard() {
 
                 <div>
 
-                  <h1 className="text-4xl font-bold">
-                    👋 Good Afternoon, Danish
-                  </h1>
-
-                  <p className="text-blue-100 mt-3 text-lg">
-                    Welcome back! Here's what's happening with your customer feedback today.
-                  </p>
+                 <UserGreeting />
 
                 </div>
 
@@ -85,19 +121,19 @@ export default async function Dashboard() {
                   <div className="bg-white/15 backdrop-blur-md rounded-2xl p-5 w-40">
                     <TrendingUp className="mb-2" size={24} />
                     <p className="text-blue-100 text-sm">New Feedback</p>
-                    <h2 className="text-3xl font-bold">+12</h2>
+                    <h2 className="text-3xl font-bold">+{todayFeedback}</h2>
                   </div>
 
                   <div className="bg-white/15 backdrop-blur-md rounded-2xl p-5 w-40">
                     <Smile className="mb-2" size={24} />
                     <p className="text-blue-100 text-sm">Positive</p>
-                    <h2 className="text-3xl font-bold">73%</h2>
+                    <h2 className="text-3xl font-bold">{positivePercentage}%</h2>
                   </div>
 
                   <div className="bg-white/15 backdrop-blur-md rounded-2xl p-5 w-40">
                     <Bot className="mb-2" size={24} />
-                    <p className="text-blue-100 text-sm">AI Status</p>
-                    <h2 className="text-2xl font-bold">Ready</h2>
+                    <p className="text-blue-100 text-sm">Average Rating</p>
+                    <h2 className="text-2xl font-bold">⭐ {averageRating._avg.rating?.toFixed(1) ?? "N/A"}</h2>
                   </div>
 
                 </div>
@@ -113,7 +149,7 @@ export default async function Dashboard() {
             <StatCard
               title="Total Feedback"
               value={totalFeedback}
-              change="+18% this month"
+              change={`${newFeedbackToday} received today`}
               icon={MessageSquare}
               color="bg-blue-600"
             />
@@ -121,7 +157,7 @@ export default async function Dashboard() {
             <StatCard
               title="Positive"
               value={positive}
-              change="73% of feedback"
+              change={`${positivePercentage}% of feedback`}
               icon={Smile}
               color="bg-green-600"
             />
@@ -129,7 +165,7 @@ export default async function Dashboard() {
             <StatCard
               title="Neutral"
               value={neutral}
-              change="16% of feedback"
+              change={`${neutralPercentage}% of feedback`}
               icon={Meh}
               color="bg-yellow-500"
             />
@@ -137,7 +173,7 @@ export default async function Dashboard() {
             <StatCard
               title="Negative"
               value={negative}
-              change="11% of feedback"
+              change={`${negativePercentage}% of feedback`}
               icon={Frown}
               color="bg-red-600"
             />
