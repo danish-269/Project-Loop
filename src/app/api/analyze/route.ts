@@ -111,6 +111,8 @@ ${message}
     console.log("Workspace:", workspace);
     console.log("Workspace ID:", workspace.id);
 
+    console.log("DATABASE_URL:", process.env.DATABASE_URL?.slice(0, 60));
+
     await prisma.feedback.create({
       data: {
         customer,

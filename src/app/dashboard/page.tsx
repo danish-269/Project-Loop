@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import StatCard from "@/components/StatCard";
@@ -21,6 +23,9 @@ import ThemeChart from "@/components/ThemeChart";
 import AIInsights from "@/components/AIInsights";
 
 export default async function Dashboard() {
+
+  console.log("DATABASE_URL:", process.env.DATABASE_URL?.slice(0, 60));
+  console.log("Total Feedback:", await prisma.feedback.count());
 
   const totalFeedback = await prisma.feedback.count();
 
