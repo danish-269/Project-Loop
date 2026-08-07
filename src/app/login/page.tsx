@@ -36,7 +36,7 @@ export default function LoginPage() {
 
             const data = await response.json();
 
-            console.log("Role:", data.user.role);
+            console.log("Returned user:", data.user);
 
             if (!response.ok) {
                 alert(data.message);

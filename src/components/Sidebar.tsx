@@ -1,8 +1,9 @@
 "use client";
-import { useUser } from "@/context/UserContext";
-import { usePathname } from "next/navigation";
+
 import Link from "next/link";
-import { Bot } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useUser } from "@/context/UserContext";
+
 import {
     LayoutDashboard,
     PlusCircle,
@@ -10,65 +11,62 @@ import {
     BarChart3,
     Settings,
     LogOut,
+    Bot,
 } from "lucide-react";
 
+const menu = [
+    {
+        name: "Dashboard",
+        href: "/dashboard",
+        icon: LayoutDashboard,
+        roles: ["ADMIN", "ANALYST", "VIEWER"],
+    },
+    {
+        name: "Add Feedback",
+        href: "/feedback",
+        icon: PlusCircle,
+        roles: ["ADMIN", "ANALYST"],
+    },
+    {
+        name: "Feedback History",
+        href: "/feedback/list",
+        icon: ClipboardList,
+        roles: ["ADMIN", "ANALYST", "VIEWER"],
+    },
+    {
+        name: "Reports",
+        href: "/reports",
+        icon: BarChart3,
+        roles: ["ADMIN", "ANALYST"],
+    },
+    {
+        name: "Settings",
+        href: "/settings",
+        icon: Settings,
+        roles: ["ADMIN"],
+    },
+    {
+        name: "Ask LOOP",
+        href: "/ask-loop",
+        icon: Bot,
+        roles: ["ADMIN", "ANALYST"],
+    },
+];
 
 export default function Sidebar() {
+    const pathname = usePathname();
     const user = useUser();
 
-    const menu = [
-        {
-            name: "Dashboard",
-            href: "/dashboard",
-            icon: LayoutDashboard,
-        },
+    if (!user) return null;
 
-        ...(user?.role !== "VIEWER"
-            ? [
-                {
-                    name: "Add Feedback",
-                    href: "/feedback",
-                    icon: PlusCircle,
-                },
-            ]
-            : []),
+    const filteredMenu = menu.filter((item) =>
+        item.roles.includes(user.role)
+    );
 
-        {
-            name: "Feedback History",
-            href: "/feedback/list",
-            icon: ClipboardList,
-        },
-
-        ...(user?.role !== "VIEWER"
-            ? [
-                {
-                    name: "Reports",
-                    href: "/reports",
-                    icon: BarChart3,
-                },
-                {
-                    name: "Ask LOOP",
-                    href: "/ask-loop",
-                    icon: Bot,
-                },
-            ]
-            : []),
-
-        ...(user?.role === "ADMIN"
-            ? [
-                {
-                    name: "Settings",
-                    href: "/settings",
-                    icon: Settings,
-                },
-            ]
-            : []),
-    ];
     return (
-        <aside className="w-72 bg-white border-r shadow-sm min-h-screen">
+        <aside className="w-64 bg-white border-r h-screen flex flex-col">
 
             <div className="p-8">
-
                 <h1 className="text-3xl font-bold text-blue-600">
                     Project LOOP
                 </h1>
@@ -76,38 +74,29 @@ export default function Sidebar() {
                 <p className="text-gray-500 text-sm mt-1">
                     AI Feedback Platform
                 </p>
-
             </div>
 
-            <nav className="px-5 space-y-2">
-
-                {menu.map((item) => {
-
+            <nav className="px-5 space-y-2 flex-1">
+                {filteredMenu.map((item) => {
                     const Icon = item.icon;
 
-                    const pathname = usePathname();
-
                     return (
-
                         <Link
                             key={item.name}
                             href={item.href}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${pathname === item.href
-                                ? "bg-blue-100 text-blue-600 shadow-sm"
-                                : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                                    ? "bg-blue-100 text-blue-600 shadow-sm"
+                                    : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                                 }`}
                         >
                             <Icon size={20} />
                             <span>{item.name}</span>
                         </Link>
                     );
-
                 })}
-
             </nav>
 
-            <div className="mt-auto p-5">
-
+            <div className="p-5 border-t">
                 <button
                     onClick={() => {
                         localStorage.removeItem("user");
@@ -118,7 +107,6 @@ export default function Sidebar() {
                     <LogOut size={20} />
                     Logout
                 </button>
-
             </div>
 
         </aside>
