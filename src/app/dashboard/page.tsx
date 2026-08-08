@@ -4,6 +4,7 @@ import UserGreeting from "@/components/UserGreeting";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import StatCard from "@/components/StatCard";
+import AddFeedbackButton from "@/components/AddFeedbackButton";
 
 import {
   MessageSquare,
@@ -112,7 +113,7 @@ export default async function Dashboard() {
 
                 <div>
 
-                 <UserGreeting />
+                  <UserGreeting />
 
                 </div>
 
@@ -269,13 +270,7 @@ export default async function Dashboard() {
               </span>
 
               <div className="flex gap-3">
-
-                <Link
-                  href="/feedback"
-                  className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  + Add Feedback
-                </Link>
+                <AddFeedbackButton />
 
                 <Link
                   href="/feedback/list"

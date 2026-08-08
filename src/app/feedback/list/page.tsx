@@ -9,6 +9,8 @@ import {
   Frown,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function FeedbackListPage() {
 
   const feedbacks = await prisma.feedback.findMany({
@@ -21,6 +23,13 @@ export default async function FeedbackListPage() {
     <main className="min-h-screen bg-gray-100 p-10">
 
       <div className="mb-8">
+
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium mb-5 transition"
+        >
+          ← Back to Dashboard
+        </Link>
 
         <h1 className="text-4xl font-bold text-gray-900">
           📋 Feedback History

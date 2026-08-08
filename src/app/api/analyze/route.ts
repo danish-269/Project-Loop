@@ -31,6 +31,10 @@ export async function POST(request: Request) {
       );
     }
 
+    // =========================
+    // AI ANALYSIS
+    // =========================
+
     const completion = await client.chat.completions.create({
       model: "nvidia/nemotron-nano-9b-v2:free",
       temperature: 0.2,
@@ -42,29 +46,31 @@ export async function POST(request: Request) {
 Return ONLY valid JSON in this format:
 
 {
-  "sentiment":"Positive|Neutral|Negative",
-  "theme":"One short theme",
-  "summary":"One sentence summary"
-}`
+  "sentiment": "Positive|Neutral|Negative",
+  "theme": "One short theme",
+  "summary": "One sentence summary"
+}`,
         },
         {
           role: "user",
-          content: `
-Customer: ${customer}
+          content: `Customer: ${customer}
 Email: ${email}
 Rating: ${rating}/5
 Category: ${category}
 
 Feedback:
-${message}
-`,
+${message}`,
         },
       ],
     });
 
     const result = completion.choices[0].message.content ?? "";
 
-    console.log(result);
+    console.log("AI Response:", result);
+
+    // =========================
+    // EXTRACT JSON FROM AI RESPONSE
+    // =========================
 
     const json = result.match(/\{[\s\S]*\}/);
 
@@ -82,7 +88,7 @@ ${message}
     let ai;
 
     try {
-      ai = JSON.parse(result || "{}");
+      ai = JSON.parse(json[0]);
     } catch {
       console.log("Raw AI response:", result);
 
@@ -95,6 +101,12 @@ ${message}
         { status: 500 }
       );
     }
+
+    console.log("AI Analysis:", ai);
+
+    // =========================
+    // GET WORKSPACE
+    // =========================
 
     const workspace = await prisma.workspace.findFirst();
 
@@ -111,13 +123,15 @@ ${message}
     console.log("Workspace:", workspace);
     console.log("Workspace ID:", workspace.id);
 
-    console.log("DATABASE_URL:", process.env.DATABASE_URL?.slice(0, 60));
+    // =========================
+    // SAVE FEEDBACK
+    // =========================
 
-    await prisma.feedback.create({
+    const feedback = await prisma.feedback.create({
       data: {
         customer,
         message,
-        source: "MANUAL", // change if your enum uses a different value
+        source: "MANUAL",
         sentiment: ai.sentiment?.toUpperCase(),
         theme: ai.theme,
         summary: ai.summary,
@@ -125,11 +139,16 @@ ${message}
       },
     });
 
+    console.log("Feedback created:", feedback.id);
 
+    // =========================
+    // SUCCESS
+    // =========================
 
     return NextResponse.json({
       success: true,
       result: ai,
+      feedbackId: feedback.id,
     });
   } catch (error: any) {
     console.error("OpenRouter Error:", error);
