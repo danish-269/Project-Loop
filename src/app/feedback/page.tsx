@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import RoleGuard from "@/components/RoleGuard";
+import { useUser } from "@/context/UserContext";
 
 import {
   User,
@@ -14,6 +15,8 @@ import {
 } from "lucide-react";
 
 export default function FeedbackPage() {
+  const user = useUser();
+
   const [customer, setCustomer] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -41,6 +44,7 @@ export default function FeedbackPage() {
           message,
           rating,
           category,
+          workspaceId: user?.workspaceId,
         }),
       });
 
@@ -219,14 +223,14 @@ export default function FeedbackPage() {
                       onMouseEnter={() => setHover(star)}
                       onMouseLeave={() => setHover(0)}
                       className={`transition-all duration-200 hover:scale-125 ${star <= (hover || rating)
-                          ? "scale-110 drop-shadow-md"
-                          : ""
+                        ? "scale-110 drop-shadow-md"
+                        : ""
                         }`}
                     >
                       <span
                         className={`text-4xl transition-all duration-200 ${star <= (hover || rating)
-                            ? "text-yellow-400"
-                            : "text-gray-300"
+                          ? "text-yellow-400"
+                          : "text-gray-300"
                           }`}
                       >
                         ★
@@ -236,10 +240,10 @@ export default function FeedbackPage() {
 
                   <p
                     className={`px-3 py-1 rounded-full text-sm font-medium ${rating >= 4
-                        ? "bg-green-100 text-green-700"
-                        : rating === 3
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
+                      ? "bg-green-100 text-green-700"
+                      : rating === 3
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-red-100 text-red-700"
                       }`}
                   >
                     {rating === 5 && "😍 Excellent"}

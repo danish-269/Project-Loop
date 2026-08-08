@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 const client = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -21,6 +22,38 @@ export async function POST(request: Request) {
       category,
     } = await request.json();
 
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized.",
+        },
+        { status: 401 }
+      );
+    }
+
+    if (currentUser.role !== "ADMIN") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "You do not have permission to submit feedback.",
+        },
+        { status: 403 }
+      );
+    }
+
+    if (!currentUser.workspaceId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "User is not assigned to a workspace.",
+        },
+        { status: 403 }
+      );
+    }
+
     if (!message) {
       return NextResponse.json(
         {
@@ -30,6 +63,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
 
     // =========================
     // AI ANALYSIS
@@ -108,20 +142,18 @@ ${message}`,
     // GET WORKSPACE
     // =========================
 
-    const workspace = await prisma.workspace.findFirst();
-
-    if (!workspace) {
+    if (!currentUser) {
       return NextResponse.json(
         {
           success: false,
-          message: "No workspace found.",
+          message: "Unauthorized.",
         },
-        { status: 400 }
+        { status: 401 }
       );
     }
 
-    console.log("Workspace:", workspace);
-    console.log("Workspace ID:", workspace.id);
+    console.log("Current User:", currentUser);
+    console.log("Workspace ID:", currentUser.workspaceId);
 
     // =========================
     // SAVE FEEDBACK
@@ -135,7 +167,7 @@ ${message}`,
         sentiment: ai.sentiment?.toUpperCase(),
         theme: ai.theme,
         summary: ai.summary,
-        workspaceId: workspace.id,
+        workspaceId: currentUser.workspaceId,
       },
     });
 

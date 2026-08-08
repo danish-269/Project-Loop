@@ -1,4 +1,7 @@
-import { prisma } from "@/lib/prisma";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useUser } from "@/context/UserContext";
 import StatCard from "@/components/StatCard";
 import Link from "next/link";
 
@@ -9,15 +12,52 @@ import {
   Frown,
 } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export default function FeedbackListPage() {
+  const user = useUser();
 
-export default async function FeedbackListPage() {
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const feedbacks = await prisma.feedback.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  useEffect(() => {
+    async function loadFeedback() {
+      if (!user?.workspaceId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/feedback?workspaceId=${user.workspaceId}`
+        );
+
+        const data = await response.json();
+
+        if (data.success) {
+          setFeedbacks(data.feedbacks);
+        } else {
+          console.error(data.message);
+        }
+      } catch (error) {
+        console.error("Failed to load feedback:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadFeedback();
+  }, [user?.workspaceId]);
+
+  if (!user || loading) {
+    return (
+      <main className="p-10">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-gray-500 text-lg">
+            Loading feedback...
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gray-100 p-10">
@@ -190,22 +230,51 @@ export default async function FeedbackListPage() {
 
               <div className="flex justify-between items-center mt-5">
 
-                <div className="flex gap-3">
+                {user.role !== "VIEWER" && (
+                  <div className="flex gap-3">
 
-                  <Link
-                    href={`/feedback/edit/${item.id}`}
-                    className="px-4 py-2 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-all duration-200"
-                  >
-                    ✏ Edit
-                  </Link>
+                    <Link
+                      href={`/feedback/edit/${item.id}`}
+                      className="px-4 py-2 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-all duration-200"
+                    >
+                      ✏ Edit
+                    </Link>
 
-                  <button
-                    className="px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-all duration-200"
-                  >
-                    🗑 Delete
-                  </button>
+                    <button
+                      onClick={async () => {
+                        const confirmed = confirm(
+                          "Are you sure you want to delete this feedback?"
+                        );
 
-                </div>
+                        if (!confirmed) return;
+
+                        try {
+                          const response = await fetch(`/api/feedback/${item.id}`, {
+                            method: "DELETE",
+                          });
+
+                          const data = await response.json();
+
+                          if (!data.success) {
+                            alert(data.message || "Failed to delete feedback.");
+                            return;
+                          }
+
+                          setFeedbacks((current) =>
+                            current.filter((feedback) => feedback.id !== item.id)
+                          );
+                        } catch (error) {
+                          console.error(error);
+                          alert("Something went wrong while deleting feedback.");
+                        }
+                      }}
+                      className="px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-all duration-200"
+                    >
+                      🗑 Delete
+                    </button>
+
+                  </div>
+                )}
 
                 <Link
                   href={`/feedback/${item.id}`}

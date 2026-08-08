@@ -1,47 +1,46 @@
 "use client";
 
 import {
-    BarChart,
-    Bar,
-    XAxis,
-    Tooltip,
-    ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  Tooltip,
+  ResponsiveContainer,
 } from "recharts";
 
-const data = [
-    { theme: "Support", value: 48 },
-    { theme: "Pricing", value: 23 },
-    { theme: "Delivery", value: 17 },
-    { theme: "UI", value: 12 },
-];
+type ThemeData = {
+  theme: string;
+  value: number;
+};
 
-export default function ThemeChart() {
-    return (
+type Props = {
+  data: ThemeData[];
+};
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 h-[380px]">
+export default function ThemeChart({ data }: Props) {
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6 h-[380px]">
 
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2 mb-4">
-                🔥 Top Themes
-            </h2>
+      <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2 mb-4">
+        🔥 Top Themes
+      </h2>
 
-            <ResponsiveContainer width="100%" height="90%">
+      <ResponsiveContainer width="100%" height="90%">
+        <BarChart data={data}>
 
-                <BarChart data={data}>
+          <XAxis dataKey="theme" />
 
-                    <XAxis dataKey="theme" />
+          <Tooltip />
 
-                    <Tooltip />
+          <Bar
+            dataKey="value"
+            fill="#2563eb"
+            radius={[8, 8, 0, 0]}
+          />
 
-                    <Bar
-                        dataKey="value"
-                        fill="#2563eb"
-                        radius={[8, 8, 0, 0]}
-                    />
+        </BarChart>
+      </ResponsiveContainer>
 
-                </BarChart>
-
-            </ResponsiveContainer>
-
-        </div>
-    );
+    </div>
+  );
 }

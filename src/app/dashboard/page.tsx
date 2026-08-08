@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 import UserGreeting from "@/components/UserGreeting";
+import { getCurrentUser } from "@/lib/auth";
 
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -26,25 +27,40 @@ import AIInsights from "@/components/AIInsights";
 
 export default async function Dashboard() {
 
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    return null;
+  }
+
+  const workspaceId = currentUser.workspaceId;
+
   console.log("DATABASE_URL:", process.env.DATABASE_URL?.slice(0, 60));
   console.log("Total Feedback:", await prisma.feedback.count());
 
-  const totalFeedback = await prisma.feedback.count();
+  const totalFeedback = await prisma.feedback.count({
+    where: {
+      workspaceId,
+    },
+  });
 
   const positive = await prisma.feedback.count({
     where: {
+      workspaceId,
       sentiment: "POSITIVE",
     },
   });
 
   const neutral = await prisma.feedback.count({
     where: {
+      workspaceId,
       sentiment: "NEUTRAL",
     },
   });
 
   const negative = await prisma.feedback.count({
     where: {
+      workspaceId,
       sentiment: "NEGATIVE",
     },
   });
@@ -54,6 +70,7 @@ export default async function Dashboard() {
 
   const newFeedbackToday = await prisma.feedback.count({
     where: {
+      workspaceId,
       createdAt: {
         gte: today,
       },
@@ -61,18 +78,127 @@ export default async function Dashboard() {
   });
 
   const recentFeedback = await prisma.feedback.findMany({
+    where: {
+      workspaceId,
+    },
     orderBy: {
       createdAt: "desc",
     },
     take: 5,
   });
 
-  const todayFeedback = await prisma.feedback.count({
+  const themeFeedback = await prisma.feedback.findMany({
     where: {
-      createdAt: {
-        gte: today,
-      },
+      workspaceId,
     },
+    select: {
+      theme: true,
+    },
+  });
+
+  const themeCounts: Record<string, number> = {};
+
+  themeFeedback.forEach((item) => {
+    if (!item.theme) return;
+
+    const theme = item.theme.trim();
+
+    if (!theme) return;
+
+    themeCounts[theme] = (themeCounts[theme] || 0) + 1;
+  });
+
+  const themeChartData = Object.entries(themeCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([theme, value]) => ({
+      theme,
+      value,
+    }));
+
+  const topThemeEntry = Object.entries(themeCounts).sort(
+    (a, b) => b[1] - a[1]
+  )[0];
+
+  const topTheme = topThemeEntry?.[0] || "";
+  const topThemeCount = topThemeEntry?.[1] || 0;
+
+  const negativeThemeCounts: Record<string, number> = {};
+
+  const negativeFeedback = await prisma.feedback.findMany({
+    where: {
+      workspaceId,
+      sentiment: "NEGATIVE",
+    },
+    select: {
+      theme: true,
+    },
+  });
+
+  negativeFeedback.forEach((item) => {
+    if (!item.theme) return;
+
+    const theme = item.theme.trim();
+
+    if (!theme) return;
+
+    negativeThemeCounts[theme] =
+      (negativeThemeCounts[theme] || 0) + 1;
+  });
+
+  const negativeThemeEntry = Object.entries(
+    negativeThemeCounts
+  ).sort((a, b) => b[1] - a[1])[0];
+
+  const negativeTheme = negativeThemeEntry?.[0] || "";
+  const negativeThemeCount = negativeThemeEntry?.[1] || 0;
+
+  let recommendation =
+    "Continue monitoring customer feedback to identify improvement opportunities.";
+
+  if (negativeTheme) {
+    recommendation = `Focus on improving ${negativeTheme.toLowerCase()} to reduce negative customer feedback.`;
+  }
+
+  const monthlyFeedback = await prisma.feedback.findMany({
+    where: {
+      workspaceId,
+    },
+    select: {
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  const now = new Date();
+
+  const feedbackTrend = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date(
+      now.getFullYear(),
+      now.getMonth() - (5 - index),
+      1
+    );
+
+    const nextMonth = new Date(
+      date.getFullYear(),
+      date.getMonth() + 1,
+      1
+    );
+
+    const count = monthlyFeedback.filter(
+      (item) =>
+        item.createdAt >= date &&
+        item.createdAt < nextMonth
+    ).length;
+
+    return {
+      month: date.toLocaleString("en-US", {
+        month: "short",
+      }),
+      feedback: count,
+    };
   });
 
 
@@ -92,6 +218,9 @@ export default async function Dashboard() {
       : 0;
 
   const averageRating = await prisma.feedback.aggregate({
+    where: {
+      workspaceId,
+    },
     _avg: {
       rating: true,
     },
@@ -113,7 +242,7 @@ export default async function Dashboard() {
 
                 <div>
 
-                  <UserGreeting />
+                  <UserGreeting user={currentUser} />
 
                 </div>
 
@@ -122,7 +251,7 @@ export default async function Dashboard() {
                   <div className="bg-white/15 backdrop-blur-md rounded-2xl p-5 w-40">
                     <TrendingUp className="mb-2" size={24} />
                     <p className="text-blue-100 text-sm">New Feedback</p>
-                    <h2 className="text-3xl font-bold">+{todayFeedback}</h2>
+                    <h2 className="text-3xl font-bold">+{newFeedbackToday}</h2>
                   </div>
 
                   <div className="bg-white/15 backdrop-blur-md rounded-2xl p-5 w-40">
@@ -184,18 +313,28 @@ export default async function Dashboard() {
           <div className="grid grid-cols-3 gap-6 mt-10">
 
             <div className="col-span-2">
-              <FeedbackChart />
+              <FeedbackChart data={feedbackTrend} />
             </div>
 
-            <AIInsights />
+            <AIInsights
+              topTheme={topTheme}
+              topThemeCount={topThemeCount}
+              negativeTheme={negativeTheme}
+              negativeThemeCount={negativeThemeCount}
+              recommendation={recommendation}
+            />
 
           </div>
 
           <div className="grid grid-cols-2 gap-6 mt-6">
 
-            <SentimentChart />
+            <SentimentChart
+              positive={positivePercentage}
+              neutral={neutralPercentage}
+              negative={negativePercentage}
+            />
 
-            <ThemeChart />
+            <ThemeChart data={themeChartData} />
 
           </div>
 
@@ -270,7 +409,7 @@ export default async function Dashboard() {
               </span>
 
               <div className="flex gap-3">
-                <AddFeedbackButton />
+                {currentUser.role === "ADMIN" && <AddFeedbackButton />}
 
                 <Link
                   href="/feedback/list"

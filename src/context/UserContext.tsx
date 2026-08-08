@@ -7,6 +7,7 @@ type User = {
   name: string;
   email: string;
   role: "ADMIN" | "ANALYST" | "VIEWER";
+  workspaceId: string;
 };
 
 const UserContext = createContext<User | null>(null);
@@ -22,7 +23,11 @@ export function UserProvider({
     const stored = localStorage.getItem("user");
 
     if (stored) {
-      setUser(JSON.parse(stored));
+      try {
+        setUser(JSON.parse(stored));
+      } catch {
+        localStorage.removeItem("user");
+      }
     }
   }, []);
 

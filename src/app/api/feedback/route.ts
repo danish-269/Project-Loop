@@ -5,7 +5,7 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        const { customer, source, message } = body;
+        const { customer, source, message, workspaceId } = body;
 
         if (!message) {
             return NextResponse.json(
@@ -19,8 +19,23 @@ export async function POST(request: Request) {
             );
         }
 
-        // Get the first workspace (temporary solution)
-        const workspace = await prisma.workspace.findFirst();
+        if (!workspaceId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Workspace ID is required.",
+                },
+                {
+                    status: 400,
+                }
+            );
+        }
+
+        const workspace = await prisma.workspace.findUnique({
+            where: {
+                id: workspaceId,
+            },
+        });
 
         if (!workspace) {
             return NextResponse.json(
@@ -96,6 +111,48 @@ export async function POST(request: Request) {
             {
                 status: 500,
             }
+        );
+    }
+}
+
+export async function GET(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url);
+
+        const workspaceId = searchParams.get("workspaceId");
+
+        if (!workspaceId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Workspace ID is required.",
+                },
+                { status: 400 }
+            );
+        }
+
+        const feedbacks = await prisma.feedback.findMany({
+            where: {
+                workspaceId,
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+
+        return NextResponse.json({
+            success: true,
+            feedbacks,
+        });
+    } catch (error) {
+        console.error("Feedback API Error:", error);
+
+        return NextResponse.json(
+            {
+                success: false,
+                message: "Failed to fetch feedback.",
+            },
+            { status: 500 }
         );
     }
 }

@@ -1,11 +1,16 @@
 "use client";
 
 import { Bell, Search } from "lucide-react";
-import { useUser } from "@/context/UserContext";
 
-export default function Navbar() {
+type User = {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    workspaceId: string;
+};
 
-    const user = useUser();
+export default function Navbar({ user }: { user: User }) {
     return (
         <header className="bg-white text-gray-900 border-b shadow-sm px-8 py-5 flex justify-between items-center">
 
@@ -34,16 +39,16 @@ export default function Navbar() {
                 <div className="flex items-center gap-3">
 
                     <div className="w-11 h-11 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
-                        {user?.name?.charAt(0).toUpperCase() || "U"}
+                        {user.name.charAt(0).toUpperCase()}
                     </div>
 
                     <div>
                         <h3 className="font-semibold text-gray-900">
-                            {user?.name || "User"}
+                            {user.name}
                         </h3>
 
                         <p className="text-sm text-gray-500">
-                            {user?.role || ""}
+                            {user.role}
                         </p>
                     </div>
 

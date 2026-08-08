@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useUser } from "@/context/UserContext";
 
 import {
     LayoutDashboard,
@@ -53,11 +52,16 @@ const menu = [
     },
 ];
 
-export default function Sidebar() {
-    const pathname = usePathname();
-    const user = useUser();
+type User = {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    workspaceId: string;
+};
 
-    if (!user) return null;
+export default function Sidebar({ user }: { user: User }) {
+    const pathname = usePathname();
 
     const filteredMenu = menu.filter((item) =>
         item.roles.includes(user.role)
@@ -85,8 +89,8 @@ export default function Sidebar() {
                             key={item.name}
                             href={item.href}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${pathname === item.href
-                                    ? "bg-blue-100 text-blue-600 shadow-sm"
-                                    : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                                ? "bg-blue-100 text-blue-600 shadow-sm"
+                                : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                                 }`}
                         >
                             <Icon size={20} />

@@ -1,10 +1,8 @@
-"use client";
+type User = {
+  name: string;
+};
 
-import { useUser } from "@/context/UserContext";
-
-export default function UserGreeting() {
-  const user = useUser();
-
+export default function UserGreeting({ user }: { user: User }) {
   const hour = new Date().getHours();
 
   let greeting = "Good Evening";
@@ -15,7 +13,7 @@ export default function UserGreeting() {
   return (
     <>
       <h1 className="text-4xl font-bold">
-        👋 {greeting}, {user?.name || "User"}
+        👋 {greeting}, {user.name}
       </h1>
 
       <p className="text-blue-100 mt-3 text-lg">

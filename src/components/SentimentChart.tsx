@@ -1,56 +1,73 @@
 "use client";
 
 import {
-    PieChart,
-    Pie,
-    Cell,
-    Tooltip,
-    ResponsiveContainer,
-    Legend,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
 } from "recharts";
 
-const data = [
-    { name: "Positive", value: 73 },
-    { name: "Neutral", value: 16 },
-    { name: "Negative", value: 11 },
-];
+type Props = {
+  positive: number;
+  neutral: number;
+  negative: number;
+};
 
 const COLORS = ["#22c55e", "#eab308", "#ef4444"];
 
-export default function SentimentChart() {
-    return (
-        <div className="bg-white rounded-2xl shadow-lg p-6 h-[380px]">
+export default function SentimentChart({
+  positive,
+  neutral,
+  negative,
+}: Props) {
+  const data = [
+    {
+      name: "Positive",
+      value: positive,
+    },
+    {
+      name: "Neutral",
+      value: neutral,
+    },
+    {
+      name: "Negative",
+      value: negative,
+    },
+  ];
 
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2 mb-4">
-                🎨 Sentiment Distribution
-            </h2>
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6">
 
-            <ResponsiveContainer width="100%" height="90%">
-                <PieChart>
+      <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2 mb-4">
+        🎨 Sentiment Distribution
+      </h2>
 
-                    <Pie
-                        data={data}
-                        dataKey="value"
-                        nameKey="name"
-                        outerRadius={110}
-                        label
-                    >
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
 
-                        {data.map((entry, index) => (
-                            <Cell
-                                key={index}
-                                fill={COLORS[index]}
-                            />
-                        ))}
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            outerRadius={110}
+            label
+          >
+            {data.map((entry, index) => (
+              <Cell
+                key={entry.name}
+                fill={COLORS[index]}
+              />
+            ))}
+          </Pie>
 
-                    </Pie>
+          <Tooltip />
+          <Legend />
 
-                    <Tooltip />
-                    <Legend />
+        </PieChart>
+      </ResponsiveContainer>
 
-                </PieChart>
-            </ResponsiveContainer>
-
-        </div>
-    );
+    </div>
+  );
 }

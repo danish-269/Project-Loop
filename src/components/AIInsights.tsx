@@ -1,6 +1,22 @@
-export default function AIInsights() {
+"use client";
+
+type Props = {
+  topTheme: string;
+  topThemeCount: number;
+  negativeTheme: string;
+  negativeThemeCount: number;
+  recommendation: string;
+};
+
+export default function AIInsights({
+  topTheme,
+  topThemeCount,
+  negativeTheme,
+  negativeThemeCount,
+  recommendation,
+}: Props) {
   return (
-    <div className="bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl shadow-xl p-6 text-white h-full">
+    <div className="bg-gradient-to-br from-indigo-600 to-blue-600 text-white rounded-2xl shadow-lg p-6">
 
       <h2 className="text-2xl font-bold mb-6">
         🤖 AI Insights
@@ -10,11 +26,15 @@ export default function AIInsights() {
 
         <div className="bg-white/10 rounded-xl p-4">
           <h3 className="font-semibold">
-            Most customers love
+            Most Common Theme
           </h3>
 
           <p className="text-sm mt-2">
-            Easy-to-use interface and smooth experience.
+            {topTheme
+              ? `${topTheme} appears most frequently in your feedback (${topThemeCount} ${
+                  topThemeCount === 1 ? "time" : "times"
+                }).`
+              : "No theme data available yet."}
           </p>
         </div>
 
@@ -24,7 +44,11 @@ export default function AIInsights() {
           </h3>
 
           <p className="text-sm mt-2">
-            Faster customer support response.
+            {negativeTheme
+              ? `${negativeTheme} is the most common theme among negative feedback (${negativeThemeCount} ${
+                  negativeThemeCount === 1 ? "entry" : "entries"
+                }).`
+              : "No negative feedback data available yet."}
           </p>
         </div>
 
@@ -34,7 +58,7 @@ export default function AIInsights() {
           </h3>
 
           <p className="text-sm mt-2">
-            Improve support turnaround to increase satisfaction.
+            {recommendation}
           </p>
         </div>
 

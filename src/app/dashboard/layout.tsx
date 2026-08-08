@@ -1,27 +1,34 @@
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
-import { UserProvider } from "@/context/UserContext";
+import { getCurrentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function DashboardLayout({
-    children,
+export default async function DashboardLayout({
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    return (
-        <div className="flex min-h-screen bg-gray-100">
+  const currentUser = await getCurrentUser();
 
-            <Sidebar />
+  if (!currentUser) {
+    redirect("/login");
+  }
 
-            <div className="flex-1">
+  return (
+    <div className="flex min-h-screen bg-gray-100">
 
-                <Navbar />
+      <Sidebar user={currentUser} />
 
-                <main className="p-8">
-                    {children}
-                </main>
+      <div className="flex-1">
 
-            </div>
+        <Navbar user={currentUser} />
 
-        </div>
-    );
+        <main className="p-8">
+          {children}
+        </main>
+
+      </div>
+
+    </div>
+  );
 }
